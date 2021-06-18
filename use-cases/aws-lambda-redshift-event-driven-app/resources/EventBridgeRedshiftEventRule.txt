@@ -1,0 +1,25 @@
+EventBridgeRedshiftEventRule:
+   Type: "AWS::Events::Rule"
+   Description: redshift event capture rule
+   Properties:
+     EventPattern: !Sub "{\"source\": [\"aws.redshift-data\"],\"detail\": {\"principal\": [\"arn:aws:sts::${AWS::AccountId}:assumed-role/${LambdaRedshiftDataApiETLRole}/${LambdaRedshiftDataApiETL}\"]}}"
+     Description: Respond to Redshift-data events
+     State: "ENABLED"
+     Targets:
+        -
+          Arn: !GetAtt 'LambdaRedshiftDataApiETL.Arn'
+          Id: EventBridgeRedshiftEventRule
+          InputTransformer:
+              InputPathsMap: {"body":"$.detail"}
+              InputTemplate: !Sub "{\"Input\":{\"redshift_cluster_id\":\"${RedshiftClusterIdentifier}\",\"redshift_database\":\"${DatabaseName}\",\"redshift_user\":\"${DbUsername}\",\"action\":\"notify\",\"subject\":\"Extract Load Transform process completed in Amazon Redshift\",\"body\":<body>,\"sns_topic_arn\":\"${RedshiftNotificationTopicSNS}\"}}"
+PermissionForRedshiftEventToInvokeLambda:
+  Type: AWS::Lambda::Permission
+  Properties:
+    FunctionName:
+      Ref: "LambdaRedshiftDataApiETL"
+    Action: "lambda:InvokeFunction"
+    Principal: "events.amazonaws.com"
+    SourceArn:
+      Fn::GetAtt:
+        - "EventBridgeRedshiftEventRule"
+        - "Arn"

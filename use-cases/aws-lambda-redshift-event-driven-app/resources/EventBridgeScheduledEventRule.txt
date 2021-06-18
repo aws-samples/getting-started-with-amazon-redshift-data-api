@@ -1,0 +1,25 @@
+EventBridgeScheduledEventRule:
+   Type: "AWS::Events::Rule"
+   Properties:
+     Description: scheduled ELT event rule
+     ScheduleExpression: !Ref ExecutionSchedule
+     State: "ENABLED"
+     Targets:
+        -
+          Arn:
+            Fn::GetAtt:
+              - "LambdaRedshiftDataApiETL"
+              - "Arn"
+          Id: ScheduledEventRedshiftELT
+          Input: !Sub "{\"Input\":{\"redshift_cluster_id\":\"${RedshiftClusterIdentifier}\",\"redshift_database\":\"${DatabaseName}\",\"redshift_user\":\"${DbUsername}\",\"action\":\"execute_sql\",\"sql_text\":\"${SqlText}\",\"sns_topic_arn\":\"${RedshiftNotificationTopicSNS}\"}}"
+PermissionForScheduledEventToInvokeLambda:
+  Type: AWS::Lambda::Permission
+  Properties:
+    FunctionName:
+      Ref: "LambdaRedshiftDataApiETL"
+    Action: "lambda:InvokeFunction"
+    Principal: "events.amazonaws.com"
+    SourceArn:
+      Fn::GetAtt:
+        - "EventBridgeScheduledEventRule"
+        - "Arn"

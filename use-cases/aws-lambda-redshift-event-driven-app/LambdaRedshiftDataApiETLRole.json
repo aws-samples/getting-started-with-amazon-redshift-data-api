@@ -1,0 +1,36 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "redshift:GetClusterCredentials",
+            "Resource": [
+                "arn:aws:redshift:us-west-2:123456789012:cluster:redshift-cluster-1",
+                "arn:aws:redshift:us-west-2:123456789012:dbname:redshift-cluster-1/dev",
+                "arn:aws:redshift:us-west-2:123456789012:dbuser:redshift-cluster-1/awsuser"
+            ]
+        },
+        {
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "redshift-data:ExecuteStatement",
+                "redshift-data:ListStatements",
+                "redshift-data:GetStatementResult",
+                "redshift-data:DescribeStatement"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "sns:Publish"
+            ],
+            "Resource": [
+                "arn:aws:sns:us-west-2:123456789012:redshift-notification-sns-topic"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}

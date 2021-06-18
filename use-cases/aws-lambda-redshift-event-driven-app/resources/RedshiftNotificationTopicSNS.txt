@@ -1,0 +1,6 @@
+RedshiftNotificationTopicSNS:
+  Type: AWS::SNS::Topic
+  Properties:
+    Subscription:
+      - Endpoint: !Ref NotificationEmailId
+        Protocol: email
