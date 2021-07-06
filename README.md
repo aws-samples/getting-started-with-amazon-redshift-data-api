@@ -22,7 +22,7 @@ The tutorial will demonstrate on how accessing Redshift Data API in Python and J
 
 ## Architectural Diagram 
 
-![Architecture Diagram](flowdiagram.png)
+![Architecture Diagram](flowdiagram.jpeg)
 
 ### About Redshift Data API
 
