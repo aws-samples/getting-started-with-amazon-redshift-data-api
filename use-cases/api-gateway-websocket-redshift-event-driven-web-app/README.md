@@ -52,7 +52,7 @@ To deploy the application using AWS CloudFormation, you would need to provide yo
 
 Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
 
-![CloudFormation Output](images/cft-output.png)
+![CloudFormation Output](images/cft-stack.png)
 
 Now, you may open this [`index.html`](index.html) file in any editor and navigate to line number 20. In that, replace the value for  `wsEndpoint` variable with the value you copied in the last step.
 
