@@ -48,15 +48,15 @@ CREATE TABLE nyc_yellow_taxi
 
 To deploy the application using AWS CloudFormation, you would need to provide your Amazon Redshift cluster’s endpoint and an existing username who have access to query above table ``nyc_yellow_taxi`. `
 
-![CloudFormation Inputs]((images/cft-inputs.png))
+![CloudFormation Inputs](images/cft-inputs.png)
 
 Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
 
-![CloudFormation Output]((images/cft-output.png))
+![CloudFormation Output](images/cft-output.png)
 
 Now, you may open this [`index.html`](index.html) file in any editor and navigate to line number 20. In that, replace the value for  `wsEndpoint` variable with the value you copied in the last step.
 
-![index.html Edit]((images/html-file.png))
+![index.html Edit](images/html-file.png)
 
 save the `index.html` file and open it in your browser. Select any input month and hit submit:
 
