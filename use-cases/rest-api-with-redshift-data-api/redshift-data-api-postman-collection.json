@@ -1,0 +1,524 @@
+{
+	"info": {
+		"_postman_id": "7aafe5b5-982f-45ff-bb29-84095e0befa6",
+		"name": "DataAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "ListDatabases",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.ListDatabases",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ClusterIdentifier\": \"<your redshift cluster identifier>\",\n \"Database\": \"dev\",\n \"DbUser\": \"awsuser\",\n \"MaxResults\": 1,\n \"NextToken\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ExecuteStatement",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.ExecuteStatement",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ClusterIdentifier\": \"<your redshift cluster identifier>\",\n \"Database\": \"dev\",\n \"DbUser\": \"awsuser\",\n \"MaxResults\": 1,\n \"Sql\": \"CREATE TABLE if not exists redshift_table( id int identity, insert_timestamp timestamp default sysdate, data varchar(max)); \",\n \"NextToken\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ExecuteStatement",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.ExecuteStatement",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ClusterIdentifier\": \"<your redshift cluster identifier>\",\n \"Database\": \"dev\",\n \"DbUser\": \"awsuser\",\n \"MaxResults\": 1,\n \"Sql\": \" insert into redshift_table(data) values('i love data api'); \", \n \"NextToken\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ExecuteStatement",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.ExecuteStatement",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ClusterIdentifier\": \"<your redshift cluster identifier>\",\n \"Database\": \"dev\",\n \"DbUser\": \"awsuser\",\n \"MaxResults\": 1,\n \"Sql\": \" select * from redshift_table;\", \n \"NextToken\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetStatementResult",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.GetStatementResult",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"Id\": \"yourStatementId\",\n \"NextToken\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DescribeStatement",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"content-type": true
+				}
+			},
+			"request": {
+				"auth": {
+					"type": "awsv4",
+					"awsv4": [
+						{
+							"key": "secretKey",
+							"value": "{{secrect-access-key}}",
+							"type": "string"
+						},
+						{
+							"key": "accessKey",
+							"value": "{{access-key-id}}",
+							"type": "string"
+						},
+						{
+							"key": "service",
+							"value": "redshift-data",
+							"type": "string"
+						},
+						{
+							"key": "region",
+							"value": "us-east-1",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Amz-Target",
+						"value": "RedshiftData.DescribeStatement",
+						"type": "text"
+					},
+					{
+						"key": "X-Requested-With",
+						"value": "XMLHttpRequest",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-amz-json-1.1",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"Id\": \"yourStatementId\" }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://redshift-data.us-east-1.amazonaws.com",
+					"protocol": "https",
+					"host": [
+						"redshift-data",
+						"us-east-1",
+						"amazonaws",
+						"com"
+					],
+					"query": [
+						{
+							"key": "path",
+							"value": "/",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "awsv4",
+		"awsv4": [
+			{
+				"key": "service",
+				"value": "redshift-data",
+				"type": "string"
+			},
+			{
+				"key": "region",
+				"value": "us-east-1",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
