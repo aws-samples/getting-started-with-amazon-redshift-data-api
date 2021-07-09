@@ -13,8 +13,8 @@ sh redshift-data.sh "insert into redshift_table(data) values('i love data api');
 
 sh redshift-data.sh "select * from redshift_table;"
 ‘’‘
-[Image: image.png]
+![shell-output](images/output-shell.png)
 You may also test python scripts from this EC2 instance using beloc commands:
 
 python3 /amazonutils/redshift-data.py
-[Image: image.png]
+![shell-output](images/output-python.png)
