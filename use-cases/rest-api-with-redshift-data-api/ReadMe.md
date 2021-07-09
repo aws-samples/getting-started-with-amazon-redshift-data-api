@@ -3,7 +3,7 @@
 
 In this tutorial, you will learn how to perform API calls directly to [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html) without any intermediately service or step. You can use any API client to perform a variety of actions on your Amazon Redshift cluster and Amazon Redshift Data API. 
 
-The URL for the Amazon Redshift Data API is: https://redshift-data.us-east-1.amazonaws.com 
+The URL for the Amazon Redshift Data API is: `https://redshift-data.[aws-region].amazonaws.com`
 
 Amazon Redshift Data API offers the following actions:
 
@@ -28,7 +28,7 @@ Please also refer to Amazon Redshift Data API’s documentation as you progress 
     * Secret Access Key ID
     * Attached `AmazonRedshiftDataFullAccess` permission 
 * An API client 
-* An available Amazon Redshift cluster in the `us-east-1` region
+* An available Amazon Redshift cluster in your `aws-region`
 
 ## Walk-through 
 
@@ -47,13 +47,14 @@ After you import, you’ll see a list of POST methods in your collection named: 
 * GetStatementResult
 * DescribeStatement
 
-For **each section**, fill in the `AccessKey` and `SecretAccessKey` retrieved from your IAM user (with correct authorization). 
+Under the DataAPI collection page, go to the Variables tab (highlighted in the screenshot below) and populate the variables with your AWS resource details. 
 
-![Access](./img/access.png)
 
-Once you have filled in your `AccessKey` and `SecretAccessKey` under the authorization tab for all of the items, we can first start off by listing the number of databases in our Amazon Redshift cluster. 
+![Access](./img/variables-definition.png)
 
-Go to the tab named “Body” and replace the request object’s values with your appropriate parameters. Afterwards, click send. 
+Once you have populated the variables, we can first start off by listing the number of databases in our Amazon Redshift cluster. 
+
+Under the ListDatabases page, go to the tab named “Body” to check what request body we are sending to the Redshift Data API. Afterwards, click send. The response should look similar to the screenshot below. 
 
 Additional information about ListDatabases can be found here: [ListDatabases Link](https://docs.aws.amazon.com/redshift-data/latest/APIReference/API_ListDatabases.html)
 
@@ -65,14 +66,17 @@ Additional information about ExecuteStatement can be found here: [ExecuteStateme
 
 ![CreateTable](./img/create-table.png)
 
-Repeat the above step for the 2nd and 3rd ExecuteStatement. 
+Repeat the above step for the 2nd and 3rd ExecuteStatement. Notice the only difference between the three ExecuteStatement methods are the SQL statements underneath each request body. You may alter it to be a variable to reduce redundancy if you'd like. 
+
+Each SQL action will return a statement Id. You may use this Id to monitor the status and other details about the SQL query. One example is to retrieve the data that is returned by a SQL query.
 
 Once you’re on the 3rd ExecuteStatement, copy down the Id that’s given in the response. 
 
 ![CopyId](./img/copy-id.png)
 
-
 To get retrieve the results from the SELECT query that we previously called in the 3rd the ExecuteStatement API call, paste the Id that was copied into the body of the GetStatementResult request body. 
+
+**Note:** You may also use Postman variables to store the statement if depending on your use-case. 
 
 ![GetResults](./img/get-results.png)
 
