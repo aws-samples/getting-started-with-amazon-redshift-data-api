@@ -11,10 +11,13 @@ sh redshift-data.sh "CREATE TABLE if not exists redshift_table ( id int identity
 
 sh redshift-data.sh "insert into redshift_table(data) values('i love data api');"
 
-sh redshift-data.sh "select * from redshift_table;"
+sh redshift-data.sh "select * from redshift_table;"  
 ‘’‘
 ![shell-output](images/output-shell.png)
+
 You may also test python scripts from this EC2 instance using beloc commands:
 
-python3 /amazonutils/redshift-data.py
+python3 /amazonutils/redshift-data.py  
+
 ![shell-output](images/output-python.png)
+
