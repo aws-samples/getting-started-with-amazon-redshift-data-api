@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Amazon Redshift What If Analysis'
+
+Parameters:
+  RedshiftClusterEndpoint:
+    Description: Redshift cluster endpoint including port number and database name
+    Type: String
+    Default: redshift-cluster.xxxxxx.region.redshift.amazonaws.com:5439/dev
+  DbUsername:
+    Description: Redshift database user name which has access to run SQL Script.
+    Type: String
+    AllowedPattern: "([a-z])([a-z]|[0-9])*"
+    Default: 'awsuser'
+  VPC:
+    Description: "vpc_id where redshift cluster is provisioned"
+    Type: AWS::EC2::VPC::Id
+  VpcCidr:
+    Description: IP range (CIDR notation) for your VPC to access redshift clusters
+    Type: String
+    Default: 10.0.0.0/8
+    MinLength: '9'
+    MaxLength: '18'
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  SubnetId:
+    Description: Subnet ID where source redshift clusters will be created. Please make sure the private subnet is attached to NAT gateway.
+    Type: AWS::EC2::Subnet::Id
+  IsPublicSubnet:
+    Description: Is the SubnetId mentioned above a public subnet?
+    Type: String
+    Default: 'No'
+    AllowedValues:
+    - 'Yes'
+    - 'No'
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: Configurations from Extract CloudFormation
+        Parameters:
+          - RedshiftClusterEndpoint
+          - DbUsername
+          - VPC
+          - VpcCidr
+          - SubnetId
+          - IsPublicSubnet
+Conditions:
+  IsSubnetPublic:
+    Fn::Not:
+      - Fn::Equals:
+          - 'No'
+          - Ref: IsPublicSubnet
+Resources:
+  SecurityGroupSageMakerNotebook:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: 'SageMaker Notebook security group'
+      SecurityGroupIngress:
+        - CidrIp: !Ref VpcCidr
+          Description : Allow inbound access on redshift port
+          IpProtocol: tcp
+          FromPort: 5439
+          ToPort:  5439
+      VpcId: !Ref VPC
+
+  SecurityGroupSelfReference:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Self Referencing Rule
+      FromPort: -1
+      IpProtocol: -1
+      GroupId: !GetAtt [SecurityGroupSageMakerNotebook, GroupId]
+      SourceSecurityGroupId: !GetAtt [SecurityGroupSageMakerNotebook, GroupId]
+      ToPort: -1
+
+  SagemakerNotebookIAMRole:
+    Type: AWS::IAM::Role
+    Properties :
+      AssumeRolePolicyDocument:
+        Version : 2012-10-17
+        Statement :
+          -
+            Effect : Allow
+            Principal :
+              Service :
+                - sagemaker.amazonaws.com
+            Action :
+              - sts:AssumeRole
+      Path : /
+      Policies:
+        - PolicyName: SimpleReplayIAMPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - redshift-data:ExecuteStatement
+                  - redshift-data:ListStatements
+                  - redshift-data:GetStatementResult
+                  - redshift-data:DescribeStatement
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - redshift:GetClusterCredentials
+                Resource:
+                  - !Sub
+                    - arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:cluster:${SourceRedshiftClusterIdentifier}
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
+                  - !Sub
+                    - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:${SourceRedshiftClusterIdentifier}/${RedshiftDatabaseName}"
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]],RedshiftDatabaseName: !Select [1, !Split ["/", !Ref RedshiftClusterEndpoint]]}
+                  - !Sub
+                    - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:${SourceRedshiftClusterIdentifier}/${DbUsername}"
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
+  NotebookInstance:
+    Type: "AWS::SageMaker::NotebookInstance"
+    Properties:
+      InstanceType: "ml.t3.medium"
+      RoleArn: !GetAtt SagemakerNotebookIAMRole.Arn
+      DirectInternetAccess: !If [IsSubnetPublic, "Enabled", "Disabled"]
+      DefaultCodeRepository: "https://github.com/aws-samples/getting-started-with-amazon-redshift-data-api.git"
+      RootAccess: Enabled
+      SecurityGroupIds:
+        - Ref: SecurityGroupSageMakerNotebook
+      SubnetId: !Ref SubnetId
+      VolumeSizeInGB: 20
