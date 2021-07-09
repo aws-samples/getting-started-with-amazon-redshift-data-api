@@ -46,7 +46,7 @@ CREATE TABLE nyc_yellow_taxi
 
 ### Deploy CloudFormation Template
 
-To deploy the application using AWS CloudFormation, you would need to provide your Amazon Redshift cluster’s endpoint and an existing username who have access to query above table ``nyc_yellow_taxi`. `
+To deploy the application using AWS CloudFormation, you would need to provide your Amazon Redshift cluster’s endpoint and an existing username who have access to query above table `nyc_yellow_taxi`.
 
 ![CloudFormation Inputs](images/cft-inputs.png)
 
@@ -58,10 +58,9 @@ Now, you may open this [`index.html`](index.html) file in any editor and navigat
 
 ![index.html Edit](images/html-file.png)
 
-save the `index.html` file and open it in your browser. Select any input month and hit submit:
+save the [`index.html`](index.html) file and open it in your browser. Select any input month and hit submit:
 
 ![Index.html](images/web-input.png)
-
 
 You should be able to see the output in few seconds as below, which is delivered using web-socket to your web browser:
 ![Index.html](images/web-output.png)
