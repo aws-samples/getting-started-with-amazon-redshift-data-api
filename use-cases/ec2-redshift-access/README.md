@@ -1,6 +1,6 @@
 # Using the Amazon Redshift Data API from your Amazon EC2 based applications
 
-In this AWS Sample code, you will learn how to use [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html)to access your Amazon Redshift Data Warehouse seamlessly from your Amazon EC2 instance using IAM credentials without any password management hassles.
+In this AWS Sample code, you will learn how to use [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html) to access your Amazon Redshift Data Warehouse seamlessly from your Amazon EC2 instance using IAM credentials without any password management hassles.
 
 You may use this AWS CloudFormation template to provision this setup, which would provision an Amazon EC2 instance, that you may use to connect with Amazon Redshift using IAM credentials.
 
