@@ -7,8 +7,8 @@ As explained in AWS [blogbost](https://aws.amazon.com/blogs/compute/announcing-w
 
 WebSocket APIs becomes very useful in designing a de-coupled web architecture, when dealing with long running operations like analyzing massive amounts of data in a database. Response from the database might take multiple seconds in some cases and WebSocket implementation makes the interaction more efficient instead of traditional long polling model with REST based HTTP request/response methods.
 
-In this repository, we are demonstrating a web application to implement similar architecture leveraging Amazon Redshift Data API and Amazon API Gateway. Below is the architecture diagram for this application, which can be deployed in your AWS Account using this AWS CloudFormation template:
-[Image: image.png]
+In this repository, we are demonstrating a web application to implement similar architecture leveraging Amazon Redshift Data API and Amazon API Gateway. Below is the architecture diagram for this application, which can be deployed in your AWS Account using this [AWS CloudFormation template](redshift-data-api-gw-websocket.yaml):
+![Architecture Diagram](images/architecture.png)
 Below are the steps performed by this application as shown in above diagram:
 
 1. end users would request data through their web/mobile clients, which would create a WebSocket connection in Amazon API Gateway.
@@ -23,9 +23,9 @@ Below are the steps performed by this application as shown in above diagram:
 ### Prerequisite Steps:
 
 In this sample application, we used [New York Taxi data](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)for the year 2015, which is pre-populated this in an Amazon S3 bucket. You would need to create a table `nyc_yellow_taxi` and populate data on this table to test-deploy this application. Please run below statements in your Amazon Redshift cluster prior deploying the CloudFormation template:
+
 ```sql
 
-```
 DROP TABLE IF EXISTS nyc_yellow_taxi;
 CREATE TABLE nyc_yellow_taxi
   (pickup_date        DATE
@@ -44,19 +44,24 @@ CREATE TABLE nyc_yellow_taxi
 
 ```
 
-
-```
-
 ### Deploy CloudFormation Template
 
 To deploy the application using AWS CloudFormation, you would need to provide your Amazon Redshift cluster’s endpoint and an existing username who have access to query above table ``nyc_yellow_taxi`. `
 
-[Image: image.png]Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
-[Image: image.png]Now, you may open this `index.html` file in any editor and navigate to line number 20. In that, replace the value for  `wsEndpoint` variable with the value you copied in the last step.
-[Image: image.png]save the `index.html` file and open it in your browser. Select any input month and hit submit:
+![CloudFormation Inputs]((images/cft-inputs.png))
 
-[Image: image.png]
+Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
+
+![CloudFormation Output]((images/cft-output.png))
+
+Now, you may open this [`index.html`](index.html) file in any editor and navigate to line number 20. In that, replace the value for  `wsEndpoint` variable with the value you copied in the last step.
+
+![index.html Edit]((images/html-file.png))
+
+save the `index.html` file and open it in your browser. Select any input month and hit submit:
+
+![Index.html]((images/web-input.png))
 
 
 You should be able to see the output in few seconds as below:
-[Image: image.png]
+![Index.html]((images/web-output.png))
