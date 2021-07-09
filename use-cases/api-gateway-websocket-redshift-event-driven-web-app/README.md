@@ -1,7 +1,7 @@
 # Event Driven Web Application using Amazon Redshift Data API and Amazon API Gateway WebSockets
 
 
-In this AWS Sample code, you will learn how to use [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html)and [Amazon API Gateway](https://aws.amazon.com/api-gateway/) to create an event driven web application leveraging websockets API.
+In this AWS Sample code, you will learn how to use [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html) and [Amazon API Gateway](https://aws.amazon.com/api-gateway/) to create an event driven web application leveraging websockets API.
 
 As explained in AWS [blogbost](https://aws.amazon.com/blogs/compute/announcing-websocket-apis-in-amazon-api-gateway/), Amazon API Gateway supports [WebSocket APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-overview.html), which allows developers to efficiently design event driven web applications with two-way interactive communication session between the user and the server.
 
@@ -22,7 +22,11 @@ Below are the steps performed by this application as shown in above diagram:
 
 ### Prerequisite Steps:
 
+<<<<<<< HEAD
 In this sample application, we used [New York Taxi data](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page)for the year 2015, which is pre-populated this in an Amazon S3 bucket. You would need to create a table `nyc_yellow_taxi` and populate data on this table to test-deploy this application. Please run below statements in your Amazon Redshift cluster prior deploying the CloudFormation template:
+=======
+In this sample application, we used [New York Taxi data](https://www1.nyc.gov/site/tlc/about/tlc-trip-record-data.page) for the year 2015, which is pre-populated this in an Amazon S3 bucket. You would need to create a table `nyc_yellow_taxi` and populate data on this table to test-deploy this application. Please run below statements in your Amazon Redshift cluster prior deploying the CloudFormation template:
+>>>>>>> 689116977047607f22d3c2a466c9449a9d043b22
 
 ```sql
 
@@ -48,6 +52,7 @@ CREATE TABLE nyc_yellow_taxi
 
 To deploy the application using AWS CloudFormation, you would need to provide your Amazon Redshift cluster’s endpoint and an existing username who have access to query above table ``nyc_yellow_taxi`. `
 
+<<<<<<< HEAD
 ![CloudFormation Inputs]((images/cft-inputs.png))
 
 Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
@@ -65,3 +70,22 @@ save the `index.html` file and open it in your browser. Select any input month a
 
 You should be able to see the output in few seconds as below:
 ![Index.html]((images/web-output.png))
+=======
+![CloudFormation Inputs](images/cft-inputs.png)
+
+Once Deployed, you may navigate to the output section of your CloudFormation stack and copy the value for parameter `RedshiftDataApiWebSocketEndpoint`
+
+![CloudFormation Output](images/cft-stack.png)
+
+Now, you may open this [`index.html`](index.html) file in any editor and navigate to line number 20. In that, replace the value for  `wsEndpoint` variable with the value you copied in the last step.
+
+![index.html Edit](images/html-file.png)
+
+save the `index.html` file and open it in your browser. Select any input month and hit submit:
+
+![Index.html](images/web-input.png)
+
+
+You should be able to see the output in few seconds as below, which is delivered using web-socket to your web browser:
+![Index.html](images/web-output.png)
+>>>>>>> 689116977047607f22d3c2a466c9449a9d043b22
