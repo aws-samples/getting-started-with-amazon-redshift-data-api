@@ -58,9 +58,9 @@ Now, you may open this [`index.html`](index.html) file in any editor and navigat
 
 ![index.html Edit](images/html-file.png)
 
-save the `index.html` file and open it in your browser. Select any input month and hit submit:
+save the [`index.html`](index.html) file and open it in your browser. Select any input month and hit submit:
 
-![Index.html]((images/web-input.png))
+![Index.html](images/web-input.png)
 
 You should be able to see the output in few seconds as below, which is delivered using web-socket to your web browser:
 ![Index.html](images/web-output.png)
