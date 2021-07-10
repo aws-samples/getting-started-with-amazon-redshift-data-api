@@ -3,7 +3,7 @@
 
 In this tutorial, you will learn how to perform API calls directly to [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html) without any intermediately service or step. You can use any API client to perform a variety of actions on your Amazon Redshift cluster and Amazon Redshift Data API. 
 
-The URL for the Amazon Redshift Data API is: https://redshift-data.us-east-1.amazonaws.com 
+The URL for the Amazon Redshift Data API is: `https://redshift-data.[aws-region].amazonaws.com`
 
 Amazon Redshift Data API offers the following actions:
 
@@ -28,7 +28,7 @@ Please also refer to Amazon Redshift Data API’s documentation as you progress 
     * Secret Access Key ID
     * Attached `AmazonRedshiftDataFullAccess` permission 
 * An API client 
-* An available Amazon Redshift cluster in the `us-east-1` region
+* An available Amazon Redshift cluster in your `aws-region`
 
 ## Walk-through 
 
