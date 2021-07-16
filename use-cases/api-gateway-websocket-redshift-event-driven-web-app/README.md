@@ -3,7 +3,7 @@
 
 In this AWS Sample code, you will learn how to use [Amazon Redshift Data API](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html) and [Amazon API Gateway](https://aws.amazon.com/api-gateway/) to create an event driven web application leveraging websockets API.
 
-As explained in AWS [blogbost](https://aws.amazon.com/blogs/compute/announcing-websocket-apis-in-amazon-api-gateway/), Amazon API Gateway supports [WebSocket APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-overview.html), which allows developers to efficiently design event driven web applications with two-way interactive communication session between the user and the server.
+As explained in AWS [blogpost](https://aws.amazon.com/blogs/compute/announcing-websocket-apis-in-amazon-api-gateway/), Amazon API Gateway supports [WebSocket APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-overview.html), which allows developers to efficiently design event driven web applications with two-way interactive communication session between the user and the server.
 
 WebSocket APIs becomes very useful in designing a de-coupled web architecture, when dealing with long running operations like analyzing massive amounts of data in a database. Response from the database might take multiple seconds in some cases and WebSocket implementation makes the interaction more efficient instead of traditional long polling model with REST based HTTP request/response methods.
 
