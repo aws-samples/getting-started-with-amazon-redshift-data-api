@@ -26,6 +26,14 @@ Parameters:
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
     ConstraintDescription: Required. Can be characters and underscore only. No numbers or special characters allowed.
+  DDLScriptS3Path:
+    Description: S3 URI to store the SQL script file. Please note, this automation would grant READ access on your SQL script files' S3 bucket.
+    Type: String
+    Default: s3://setup-script-bucket/setupscript.sql
+  QueryScriptS3Path:
+    Description: S3 URI to store the SQL script file. 
+    Type: String
+    Default: s3://setup-script-bucket/queryscript.sql
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -37,6 +45,8 @@ Metadata:
           - DbUsername
           - DDBTableName
           - WebSocketEndpointSSMParameterName
+          - DDLScriptS3Path
+          - QueryScriptS3Path
 Resources:
   ApplicationWebSocket:
     Type: AWS::ApiGatewayV2::Api
@@ -155,56 +165,265 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-          -
-            PolicyName: LambdaInvokePolicy
-            PolicyDocument :
-              Version: 2012-10-17
-              Statement:
-                - Effect: "Allow"
-                  Action:
-                  - dynamodb:GetItem
-                  - dynamodb:DeleteItem
-                  - dynamodb:PutItem
-                  - dynamodb:Scan
-                  - dynamodb:Query
-                  - dynamodb:UpdateItem
-                  - dynamodb:BatchWriteItem
-                  - dynamodb:BatchGetItem
-                  - dynamodb:DescribeTable
-                  - dynamodb:ConditionCheckItem
-                  Resource:
-                    - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBTableName}"
-                    - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBTableName}/index/*"
-                - Effect: "Allow"
-                  Action:
-                  - execute-api:ManageConnections
-                  Resource:
-                    - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApplicationWebSocket}/*"
+        - PolicyName: QueryScriptS3AccessPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                Resource:
+                  - !Sub
+                      - arn:aws:s3:::${QueryScriptS3}/*
+                      - {QueryScriptS3: !Select [2, !Split ["/", !Ref QueryScriptS3Path]]}
+                  - !Sub
+                      - arn:aws:s3:::${QueryScriptS3}
+                      - {QueryScriptS3: !Select [2, !Split ["/", !Ref QueryScriptS3Path]]}     
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument :
+            Version: 2012-10-17
+            Statement:
+              - Effect: "Allow"
+                Action:
+                - dynamodb:GetItem
+                - dynamodb:DeleteItem
+                - dynamodb:PutItem
+                - dynamodb:Scan
+                - dynamodb:Query
+                - dynamodb:UpdateItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:BatchGetItem
+                - dynamodb:DescribeTable
+                - dynamodb:ConditionCheckItem
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBTableName}"
+                  - !Sub "arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DDBTableName}/index/*"
+              - Effect: "Allow"
+                Action:
+                - execute-api:ManageConnections
+                Resource:
+                  - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApplicationWebSocket}/*"
 
-                - Effect: Allow
-                  Action:
-                    - redshift-data:ExecuteStatement
-                    - redshift-data:ListStatements
-                    - redshift-data:GetStatementResult
-                    - redshift-data:DescribeStatement
-                    - ssm:GetParameters
-                    - ssm:GetParameter
-                    - ssm:DescribeParameters
-                  Resource:
-                    - '*'
-                - Effect: Allow
-                  Action:
-                    - redshift:GetClusterCredentials
-                  Resource:
-                    - !Sub
+              - Effect: Allow
+                Action:
+                  - redshift-data:ExecuteStatement
+                  - redshift-data:ListStatements
+                  - redshift-data:GetStatementResult
+                  - redshift-data:DescribeStatement
+                  - ssm:GetParameters
+                  - ssm:GetParameter
+                  - ssm:DescribeParameters
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - redshift:GetClusterCredentials
+                Resource:
+                  - !Sub
+                    - arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:cluster:${SourceRedshiftClusterIdentifier}
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
+                  - !Sub
+                    - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:${SourceRedshiftClusterIdentifier}/${RedshiftDatabaseName}"
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]],RedshiftDatabaseName: !Select [1, !Split ["/", !Ref RedshiftClusterEndpoint]]}
+                  - !Sub
+                    - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:${SourceRedshiftClusterIdentifier}/${DbUsername}"
+                    - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
+  SetupLambdaRedshiftDataAPIRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Description : IAM Role for lambda to access Redshift, S3 and execute the Data API   
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      Path: /
+      Policies:
+        - PolicyName: SetupRedshiftDataApiPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'redshift-data:ExecuteStatement'
+                  - 'redshift-data:GetStatementResult'
+                  - 'redshift-data:DescribeStatement'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'redshift:GetClusterCredentials'
+                Resource:
+                  - !Sub 
                       - arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:cluster:${SourceRedshiftClusterIdentifier}
                       - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
-                    - !Sub
-                      - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:${SourceRedshiftClusterIdentifier}/${RedshiftDatabaseName}"
-                      - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]],RedshiftDatabaseName: !Select [1, !Split ["/", !Ref RedshiftClusterEndpoint]]}
-                    - !Sub
-                      - "arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:${SourceRedshiftClusterIdentifier}/${DbUsername}"
+                  - !Sub 
+                      - arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbname:${SourceRedshiftClusterIdentifier}/${RedshiftDatabaseName}
+                      - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]],RedshiftDatabaseName: !Select [1, !Split ["/", !Ref RedshiftClusterEndpoint]]}   
+                  - !Sub 
+                      - arn:aws:redshift:${AWS::Region}:${AWS::AccountId}:dbuser:${SourceRedshiftClusterIdentifier}/${DbUsername}
                       - {SourceRedshiftClusterIdentifier: !Select [0, !Split [".", !Ref RedshiftClusterEndpoint]]}
+        - PolicyName: DDLScriptS3AccessPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketLocation'
+                  - 's3:GetObject'
+                  - 's3:ListBucket'
+                Resource:
+                  - !Sub
+                      - arn:aws:s3:::${DDLScriptS3}/*
+                      - {DDLScriptS3: !Select [2, !Split ["/", !Ref DDLScriptS3Path]]}
+                  - !Sub
+                      - arn:aws:s3:::${DDLScriptS3}
+                      - {DDLScriptS3: !Select [2, !Split ["/", !Ref DDLScriptS3Path]]}                  
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AWSLambdaExecute'
+  SetupRedshiftLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Description: SetupRedshiftLambdaFunction
+      Handler: index.handler
+      MemorySize: 256
+      Runtime: nodejs12.x
+      Role: !GetAtt 'SetupLambdaRedshiftDataAPIRole.Arn'
+      Timeout: 600
+      Environment:
+        Variables:
+          REDSHIFT_ENDPOINT:
+            Ref: RedshiftClusterEndpoint
+          REDSHIFT_USER:
+            Ref: DbUsername
+          DDL_SCRIPT_S3_URI:
+            Ref: DDLScriptS3Path
+      Code:
+        ZipFile: | 
+          const AWS = require('aws-sdk');
+          const cfnResponse = require('cfn-response');
+
+
+          exports.handler = async (event, context) => {
+            console.log(event);
+            const redshiftClusterId = process.env.REDSHIFT_ENDPOINT.split('.')[0];
+            const redshiftDatabaseName = process.env.REDSHIFT_ENDPOINT.split('/')[1];
+            const s3Client = new AWS.S3({apiVersion: '2006-03-01'}); // https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-example-creating-buckets.html
+            const ddlScriptS3Path = process.env.DDL_SCRIPT_S3_URI;
+            const script = await runSQLScriptFromS3(s3Client, ddlScriptS3Path);
+
+
+            const res = await executeRedshiftSql(event, context, redshiftClusterId, redshiftDatabaseName, process.env.REDSHIFT_USER, script);
+            await sendCfnRes(event, context, cfnResponse.SUCCESS);
+          };
+
+          const sendCfnRes = (event, context, status, data) => {
+            return new Promise(() => cfnResponse.send(event, context, status,
+              {'Data': data}));
+          }
+
+          const runSQLScriptFromS3 = async (s3Client, scriptS3Path) => {
+            if (scriptS3Path.length === 0){
+              console.error('setup script s3 path is empty.');
+            }
+            const [bucket, key] = scriptS3Path.replace("s3://","").split("/",2);
+            try {
+              const params = {
+                Bucket: bucket,
+                Key: key 
+              }
+              const data = await s3Client.getObject(params).promise();
+              return data.Body.toString('utf-8');
+            } catch (e) {
+              throw new Error(`Could not retrieve file from S3: ${e.message}`)
+            }
+          }
+
+          const executeRedshiftSql = async (event, context, redshiftClusterId, redshiftDatabaseName, redshiftUser, script) => { 
+            const sqlStatements = script.split(/(?<=\;)/);
+            const redshiftDataClient = new AWS.RedshiftData({region: process.env.AWS_REGION});
+            let res;
+            for (const sql of sqlStatements) {
+              res = await executeSqlDataApi(event, context, redshiftDataClient, redshiftClusterId, redshiftDatabaseName, redshiftUser, sql, true);
+            }
+            return res;
+          }
+
+          const executeSqlDataApi = async (event, context, redshiftDataApiClient, redshiftClusterId, redshiftDatabaseName, redshiftUser, query, isSynchronous) => {
+            let queryId = '';
+            const executeStatementInput = {
+              ClusterIdentifier: redshiftClusterId,
+              Database: redshiftDatabaseName,
+              DbUser: redshiftUser,
+              Sql: query
+            };
+
+            // Calling Redshift Data API with executeStatement()
+            await redshiftDataApiClient.executeStatement(executeStatementInput).promise()
+              .then((response) => {
+                queryId = response.Id;
+              })
+              .catch((error) => {
+                console.log('ExecuteStatement has failed.');
+                throw new Error(error);
+              });
+
+            let { Status: queryStatus } = await getDescribeStatement(redshiftDataApiClient, queryId);
+
+            console.log(`Query Status: ${queryStatus} | QueryId: ${queryId}`);
+
+            if (isSynchronous) {
+              queryStatus = await executeSynchronousWait(event, context, redshiftDataApiClient, queryStatus, queryId);
+            }
+
+            return queryStatus;
+          };
+
+          const executeSynchronousWait = async (event,context, redshiftDataApiClient, queryStatus, queryId) => {
+            let attempts = 0;
+            let describeStatementInfo = {};
+
+            while (true) {
+              attempts++;
+              await sleep(1);
+
+              ({ Status: queryStatus, ...describeStatementInfo } = await getDescribeStatement(redshiftDataApiClient, queryId));
+
+              if (queryStatus === 'FAILED') {
+                await sendCfnRes(event, context, cfnResponse.FAILED);
+                throw new Error(`SQL query failed: ${queryId}: \n Error: ${describeStatementInfo.Error}`);
+              } else if (queryStatus === 'FINISHED') {
+                console.log(`Query status is: ${queryStatus} for query id: ${queryId} `);
+
+                break;
+              } else {
+                console.log(`Currently working... query status is ${queryStatus}`);
+              }
+
+            }
+            return queryStatus;
+          };
+
+          const getDescribeStatement = async (redshiftDataApiClient, queryId) => redshiftDataApiClient
+            .describeStatement({ Id: queryId })
+            .promise()
+            .then(response => {
+              return response;
+            })
+            .catch((error) => {
+              console.log('DescribeStatement has failed.');
+              throw new Error(error);
+            });
+
+          const sleep = (seconds) => {
+            return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+          };
+
 
   OnConnectFunction:
     Type: "AWS::Lambda::Function"
@@ -225,18 +444,25 @@ Resources:
             Ref: DbUsername
           WS_ENDPOINT_SSM_PARAMETER_NAME:
             Ref: WebSocketEndpointSSMParameterName
+          QUERY_SQL_SCRIPT_S3_URI:
+            Ref: QueryScriptS3Path
       Code:
         ZipFile: |
           const AWS = require('aws-sdk');
           exports.handler = async event => {
-            console.log(event);
 
             const redshiftClusterId = process.env.REDSHIFT_ENDPOINT.split('.')[0];
             const redshiftDatabaseName = process.env.REDSHIFT_ENDPOINT.split('/')[1];
             const wssEndpoint = await getSSMParameter(process.env.WS_ENDPOINT_SSM_PARAMETER_NAME);
-
-            const statementId = await executeRedshiftSql(redshiftClusterId, redshiftDatabaseName, process.env.REDSHIFT_USER,event.queryStringParameters.tripMonth);
+            const s3Client = new AWS.S3({apiVersion: '2006-03-01'});
+            const queryScriptS3Path = process.env.QUERY_SQL_SCRIPT_S3_URI;
+            const param = event.queryStringParameters.tripMonth;
+            let script = await runSQLScriptFromS3(s3Client, queryScriptS3Path);
+            
+            script = script.replace(/{}/g, param);
+            const statementId = await executeRedshiftSql(script, redshiftClusterId, redshiftDatabaseName, process.env.REDSHIFT_USER);
             await putConnectionRecordDdb (process.env.TABLE_NAME, event.requestContext.connectionId, statementId);
+            
 
             return { statusCode: 200, body: 'Connected.' };
           };
@@ -253,18 +479,33 @@ Resources:
               throw e;
             });
 
-          const executeRedshiftSql = async (redshiftClusterId, redshiftDatabaseName, redshiftUser, paramTripMonth) =>  new AWS.RedshiftData({ region: process.env.AWS_REGION })
+          const runSQLScriptFromS3 = async (s3Client, scriptS3Path) => {
+            if (scriptS3Path.length === 0){
+              console.error('setup script s3 path is empty.');
+            }
+            const [bucket, key] = scriptS3Path.replace("s3://","").split("/",2);
+            try {
+              const params = {
+                Bucket: bucket,
+                Key: key 
+              }
+              const data = await s3Client.getObject(params).promise();
+              return data.Body.toString('utf-8');
+            } catch (e) {
+              throw new Error(`Could not retrieve file from S3: ${e.message}`)
+            }
+          }
+
+          const executeRedshiftSql = async (sqlScript, redshiftClusterId, redshiftDatabaseName, redshiftUser) =>  new AWS.RedshiftData({ region: process.env.AWS_REGION })
             .executeStatement({
               ClusterIdentifier: redshiftClusterId,
               Database: redshiftDatabaseName,
               DbUser: redshiftUser,
-              Sql: 'SELECT pickup_date as trip_date, round(sum(datediff(minutes, pickup_datetime, dropoff_datetime))/60,2) total_hours, round(sum(trip_distance)) total_distance, round(sum(fare_amount)) total_fare FROM nyc_yellow_taxi where pickup_date between to_date(\''+ paramTripMonth + '\',\'MonthYYYY\') and last_day(to_date(\''+ paramTripMonth + '\',\'MonthYYYY\')) group by 1 order by 1',
+              Sql: sqlScript,
               WithEvent: true
             })
             .promise()
-            .then(response => {
-              return response.Id;
-            })
+            .then(response => response.Id)
             .catch((e) => {
               console.log('executeRedshiftSql failed.');
               console.log(e.stack);
@@ -363,7 +604,6 @@ Resources:
             const { TABLE_NAME } = process.env;
             const wssEndpoint = await getSSMParameter(process.env.WS_ENDPOINT_SSM_PARAMETER_NAME);
             const connectionId = await  getConnectionId(TABLE_NAME, event.data.statementId);
-
             if (event.data.state == 'FAILED'){
               await postMessage(wssEndpoint, connectionId, '{"columns":["Error"],"records":[["SQL Query Failed"]]}');
             }
@@ -371,10 +611,8 @@ Resources:
               const results = await  getResults(event.data.statementId);
               await postMessage(wssEndpoint, connectionId, results);
             }
-
             return { statusCode: 200, body: 'Data sent.' };
           };
-
           const postMessage = async (wssEndpoint, connectionId, data) => new AWS.ApiGatewayManagementApi({apiVersion: '2018-11-29',endpoint: wssEndpoint})
             .postToConnection({ ConnectionId: connectionId, Data: data })
             .promise()
@@ -383,7 +621,6 @@ Resources:
               console.log(e.stack);
               throw e;
             });
-
           const getSSMParameter = async (param) => new AWS.SSM()
             .getParameter({ Name: param })
             .promise()
@@ -395,8 +632,6 @@ Resources:
               console.log(e.stack);
               throw e;
             });
-
-
           const getConnectionId = async (tableName, statementId) => new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION })
             .query({TableName: tableName,
                 IndexName: "GSI",
@@ -412,8 +647,6 @@ Resources:
               console.log(e.stack);
               throw e;
             });
-
-
           const getResults = async (statementId) => new AWS.RedshiftData({ region: process.env.AWS_REGION })
             .getStatementResult({Id: statementId})
             .promise()
@@ -421,14 +654,11 @@ Resources:
               let records = [];
               let output = {};
               let rowValues = [];
-
               output.columns = response.ColumnMetadata.map(metaData => metaData.label);
-
               response.Records.forEach( record => {
                 rowValues = record.map(item => Object.values(item));
                 records.push(rowValues.flat());
               });
-
               output.records=records;
               return JSON.stringify(output);
             })
@@ -487,6 +717,10 @@ Resources:
           - Ref: AWS::Region
           - .amazonaws.com/
           - Ref: Stage
+  InitializationSteps:
+    Type: Custom::SetupRedshiftLambdaFunction
+    Properties:
+      ServiceToken: !GetAtt [SetupRedshiftLambdaFunction, Arn]
 
 Outputs:
   RedshiftDataApiWebSocketEndpoint:
