@@ -7,3 +7,4 @@ Common Use Case examples along with AWS CloudFormation templates on how to lever
 * [REST APIs for Amazon Redshift Data API](rest-api-with-redshift-data-api)
 * [Using the Amazon Redshift Data API from Amazon SageMaker Jupyter notebook](sagemaker-notebook-redshift-ml)
 * [Using the Amazon Redshift Data API from Amazon EC2](ec2-redshift-access)
+* [ETL Orchestration using Amazon Redshift Data API and AWS Step Functions](etl-orchestration-with-step-functions)
