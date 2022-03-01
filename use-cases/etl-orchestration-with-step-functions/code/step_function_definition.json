@@ -1,0 +1,356 @@
+{
+  "Comment": "A simple ETL workflow for loading dimension and fact tables",
+  "StartAt": "read_sp_statement",
+  "States": {
+    "read_sp_statement": {
+      "Type": "Task",
+      "Parameters": {
+        "Bucket": "${S3BucketName}",
+        "Key": "${SetupScriptFilename}"
+      },
+      "ResultPath": "$.sql_output",
+      "ResultSelector": {
+        "sql_output.$": "$.Body"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Next": "run_sp_deploy_redshift"
+    },
+    "run_sp_deploy_redshift": {
+      "Comment": "Deploy SP on Redshift cluster",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:batchExecuteStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+        "Database": "${RedshiftDbName}",
+        "Sqls.$": "States.Array($.sql_output.sql_output)",
+        "DbUser": "${RedshiftDbUser}"
+      },
+      "Next": "wait_on_sp_deploy_redshift"
+    },
+    "wait_on_sp_deploy_redshift": {
+      "Comment": "Wait before status check",
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "run_sp_deploy_redshift_status_check"
+    },
+    "run_sp_deploy_redshift_status_check": {
+      "Comment": "Check Task Status",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "Id.$": "$.sql_output.Id"
+      },
+      "Next": "is_run_sp_deploy_complete"
+    },
+    "is_run_sp_deploy_complete": {
+      "Comment": "check if run_sp_deploy step is complete",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FAILED",
+          "Next": "sales_data_pipeline_failure"
+        },
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FINISHED",
+          "Next": "setup_sales_data_pipeline"
+        }
+      ],
+      "Default": "wait_on_sp_deploy_redshift"
+    },
+    "setup_sales_data_pipeline": {
+      "Comment": "Invoke redshift batch execute",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:executeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+        "Database": "${RedshiftDbName}",
+        "Sql": "call public.sp_setup_sales_data_pipeline()",
+        "DbUser": "${RedshiftDbUser}"
+      },
+      "Next": "wait_on_setup_sales_data_pipeline"
+    },
+    "wait_on_setup_sales_data_pipeline": {
+      "Comment": "Wait before status check",
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "setup_sales_data_pipeline_status_check"
+    },
+    "setup_sales_data_pipeline_status_check": {
+      "Comment": "Check Task Status",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "Id.$": "$.sql_output.Id"
+      },
+      "Next": "is_setup_sales_data_pipeline_complete"
+    },
+    "is_setup_sales_data_pipeline_complete": {
+      "Comment": "check if setup_sales_data_pipeline step is complete",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FAILED",
+          "Next": "sales_data_pipeline_failure"
+        },
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FINISHED",
+          "Next": "run_sales_data_pipeline"
+        }
+      ],
+      "Default": "wait_on_setup_sales_data_pipeline"
+    },
+    "run_sales_data_pipeline": {
+      "Comment": "Load 2 dimension tables",
+      "Type": "Parallel",
+      "ResultPath": "$.sql_output",
+      "Next": "run_load_fact_sales",
+      "Branches": [
+        {
+          "StartAt": "LoadItemTable",
+          "States": {
+            "LoadItemTable": {
+              "Comment": "Load Item Table",
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:redshiftdata:executeStatement",
+              "ResultPath": "$.sql_output",
+              "Parameters": {
+                "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+                "Database": "${RedshiftDbName}",
+                "Sql": "call public.sp_load_dim_item()",
+                "DbUser": "${RedshiftDbUser}"
+              },
+              "Next": "wait_on_load_item_table"
+            },
+            "wait_on_load_item_table": {
+              "Comment": "Wait before status check",
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "load_item_table_status_check"
+            },
+            "load_item_table_status_check": {
+              "Comment": "Check Task Status",
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+              "ResultPath": "$.sql_output",
+              "Parameters": {
+                "Id.$": "$.sql_output.Id"
+              },
+              "Next": "is_load_item_table_complete"
+            },
+            "is_load_item_table_complete": {
+              "Comment": "check if load_item_table_complete step is complete",
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.sql_output.Status",
+                  "StringEquals": "FAILED",
+                  "Next": "load_item_table_failed"
+                },
+                {
+                  "Variable": "$.sql_output.Status",
+                  "StringEquals": "FINISHED",
+                  "Next": "load_item_table_success"
+                }
+              ],
+              "Default": "wait_on_load_item_table"
+            },
+            "load_item_table_success": {
+              "Type": "Pass",
+              "Result": "load_fact_sales_pipeline_success",
+              "End": true
+            },
+            "load_item_table_failed": {
+              "Type": "Fail",
+              "Cause": "Failure on load item table",
+              "Error": "Error"
+            }
+          }
+        },
+        {
+          "StartAt": "LoadCustomerAddressTable",
+          "States": {
+            "LoadCustomerAddressTable": {
+              "Comment": "Load Customer Address Table",
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:redshiftdata:executeStatement",
+              "ResultPath": "$.sql_output",
+              "Parameters": {
+                "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+                "Database": "${RedshiftDbName}",
+                "Sql": "call public.sp_load_dim_customer_address()",
+                "DbUser": "${RedshiftDbUser}"
+              },
+              "Next": "wait_on_load_customer_address_table"
+            },
+            "wait_on_load_customer_address_table": {
+              "Comment": "Wait before status check",
+              "Type": "Wait",
+              "Seconds": 5,
+              "Next": "load_customer_address_table_status_check"
+            },
+            "load_customer_address_table_status_check": {
+              "Comment": "Check Task Status",
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+              "ResultPath": "$.sql_output",
+              "Parameters": {
+                "Id.$": "$.sql_output.Id"
+              },
+              "Next": "is_load_customer_address_table_complete"
+            },
+            "is_load_customer_address_table_complete": {
+              "Comment": "check if load_customer_address_table step is complete",
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.sql_output.Status",
+                  "StringEquals": "FAILED",
+                  "Next": "load_customer_address_table_failed"
+                },
+                {
+                  "Variable": "$.sql_output.Status",
+                  "StringEquals": "FINISHED",
+                  "Next": "load_customer_address_table_success"
+                }
+              ],
+              "Default": "wait_on_load_customer_address_table"
+            },
+            "load_customer_address_table_success": {
+              "Type": "Pass",
+              "Result": "load_customer_address_table_success",
+              "End": true
+            },
+            "load_customer_address_table_failed": {
+              "Type": "Fail",
+              "Cause": "Failure on load customer_address table",
+              "Error": "Error"
+            }
+          }
+        }
+      ]
+    },
+    "run_load_fact_sales": {
+      "Comment": "Load final fact table",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:executeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+        "Database": "${RedshiftDbName}",
+        "Sql": "call public.sp_load_fact_sales(trunc(sysdate))",
+        "DbUser": "${RedshiftDbUser}"
+      },
+      "Next": "wait_on_run_load_fact_sales_pipeline"
+    },
+    "wait_on_run_load_fact_sales_pipeline": {
+      "Comment": "Wait before status check",
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "run_load_fact_sales_status_check"
+    },
+    "run_load_fact_sales_status_check": {
+      "Comment": "Check Task Status",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "Id.$": "$.sql_output.Id"
+      },
+      "Next": "is_run_load_fact_sales_pipeline_complete"
+    },
+    "is_run_load_fact_sales_pipeline_complete": {
+      "Comment": "check if load_fact_sales step is complete",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FAILED",
+          "Next": "sales_data_pipeline_failure"
+        },
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FINISHED",
+          "Next": "read_validate_fact_sales_sql_statement"
+        }
+      ],
+      "Default": "wait_on_run_load_fact_sales_pipeline"
+    },
+    "sales_data_pipeline_failure": {
+      "Type": "Fail",
+      "Cause": "Failure on Sales Data Pipeline",
+      "Error": "Error"
+    },
+    "read_validate_fact_sales_sql_statement": {
+      "Type": "Task",
+      "Parameters": {
+        "Bucket": "${S3BucketName}",
+        "Key": "${ValidateScriptFilename}"
+      },
+      "ResultPath": "$.sql_output",
+      "ResultSelector": {
+        "sql_output.$": "$.Body"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Next": "run_validate_fact_sales"
+    },
+    "run_validate_fact_sales": {
+      "Comment": "Validate validate_fact_sales",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:batchExecuteStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "ClusterIdentifier": "${RedshiftClusterIdentifier}",
+        "Database": "${RedshiftDbName}",
+        "Sqls.$": "States.Array($.sql_output.sql_output)",
+        "DbUser": "${RedshiftDbUser}"
+      },
+      "Next": "wait_on_run_validate_fact_sales"
+    },
+    "wait_on_run_validate_fact_sales": {
+      "Comment": "Wait before status check",
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "run_validate_fact_sales_status_check"
+    },
+    "run_validate_fact_sales_status_check": {
+      "Comment": "Check Task Status",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:redshiftdata:describeStatement",
+      "ResultPath": "$.sql_output",
+      "Parameters": {
+        "Id.$": "$.sql_output.Id"
+      },
+      "Next": "is_validate_fact_sales_complete"
+    },
+    "is_validate_fact_sales_complete": {
+      "Comment": "check if validate_fact_sales step is complete",
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FAILED",
+          "Next": "sales_data_pipeline_failure"
+        },
+        {
+          "Variable": "$.sql_output.Status",
+          "StringEquals": "FINISHED",
+          "Next": "validate_fact_sales_complete"
+        }
+      ],
+      "Default": "wait_on_run_validate_fact_sales"
+    },
+    "validate_fact_sales_complete": {
+      "Type": "Pass",
+      "Result": "load_fact_sales_pipeline_success",
+      "End": true
+    }
+  }
+}
