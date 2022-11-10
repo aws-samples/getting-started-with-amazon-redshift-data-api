@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Demo App</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Serverless web application example">
+    <meta name="author" content="">
+    <style>
+      .ui-datepicker-calendar {
+      display: none;
+      }
+    </style>
+
+    <link rel="stylesheet" href="/css/message.css">
+    
+  <script>
+
+
+
+</script>
+</head>
+
+<body>
+
+    <div class="info panel panel-default">
+        <div class="panel-heading">
+            <p style="text-align:right">
+		        <a id="signOut" href="/index.html">Sign Out</a>
+		        </p>
+        </div>
+    </div>
+
+
+
+    <textarea class="authToken"></textarea>
+
+    <h1>Analyze NYC yellow taxi data for year 2015</h1>
+    <button id="requestOC" type="button" >Open Connection</button>
+	<button id="requestCC" type="button" >Close Connection</button>
+    <br><br>
+    <label for="tripMonth">Trip Month :</label>
+    <input type="month" id="tripMonth" name="trip-start"
+       value=""
+       min="2015-01" max="2015-12">
+    <button id="requestSubmit" type="button" >Submit</button>
+    <table id="outputTable"> </table>
+    <div id="outputText"></div>
+
+    <script src="js/vendor/jquery-3.1.0.js"></script>
+    <script src="js/vendor/bootstrap.min.js"></script>
+    <script src="js/vendor/aws-cognito-sdk.min.js"></script>
+    <script src="js/vendor/amazon-cognito-identity.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/cognito-auth.js"></script>
+    <script src="js/demoApp.js"></script>
+</body>
+
+</html>

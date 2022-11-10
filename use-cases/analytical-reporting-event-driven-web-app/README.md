@@ -62,6 +62,12 @@ save the [`index.html`](index.html) file and open it in your browser. Select any
 
 ![Index.html](images/web-input.png)
 
-You should be able to see the output in few seconds as below, which is delivered using web-socket to your browser:
+You should be able to see the output in few seconds as below, which is delivered using web-socket to your web browser:
 
 ![Index.html](images/web-output.png)
+
+
+## License
+
+This library is licensed under the MIT-0 License. See the LICENSE file in the root directory of this repository.
+

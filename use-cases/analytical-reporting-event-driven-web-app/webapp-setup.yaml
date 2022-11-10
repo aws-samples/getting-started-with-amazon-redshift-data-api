@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  UserGitURL:
+    Type: String
+  UserGitARN:
+    Type: String
+Resources:
+  AmplifyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - amplify.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Amplify
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "amplify:*"
+                Resource: "*"
+              - Effect: Allow
+                Action: "codecommit:GitPull"
+                Resource: !Ref UserGitARN
+  DevBranch:
+    Type: AWS::Amplify::Branch
+    Properties: 
+      BranchName: master
+      AppId: !GetAtt App.AppId
+      EnableAutoBuild: yes
+      EnvironmentVariables:
+        - Name: USER_BRANCH
+          Value: dev  
+  App:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: DemoApp
+      Repository: !Ref UserGitURL
+      IAMServiceRole: !GetAtt AmplifyRole.Arn
+      BuildSpec: |
+        version: 1
+        frontend:
+          phases:
+            # IMPORTANT - Please verify your build commands
+            build:
+              commands: []
+          artifacts:
+            # IMPORTANT - Please verify your build output directory
+            baseDirectory: /
+            files:
+              - '**/*'
+          cache:
+            paths: []

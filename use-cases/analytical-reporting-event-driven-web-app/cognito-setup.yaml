@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  UserPoolName:
+    Type: String
+  UserPoolClientName:
+    Type: String
+Resources:
+  FirstRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: DemoApp
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref UserPoolName
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true  
+      AccountRecoverySetting: 
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Ref UserPoolClientName
+      GenerateSecret: FALSE
+      RefreshTokenValidity: 60
+      TokenValidityUnits:
+        RefreshToken: minutes
+      PreventUserExistenceErrors: ENABLED
+Outputs:
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  UserGitURL:
+    Value: !GetAtt FirstRepo.CloneUrlHttp
+  UserGitARN:
+    Value: !GetAtt FirstRepo.Arn
+  UserPoolARN:
+    Value: !GetAtt UserPool.Arn
