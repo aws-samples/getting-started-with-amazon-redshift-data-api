@@ -6,7 +6,7 @@ sudo yum install jq -y
 aws_region="us-east-1"
 aws_user_pool_name="MyUserPool"
 aws_client_app_name="MyPoolClientApp"
-aws cloudformation create-stack   --template-body file://cognito-setup.yaml   --stack-name CognitoSetup   --capabilities CAPABILITY_NAMED_IAM   --parameters     ParameterKey=UserPoolName,ParameterValue=$aws_user_pool_name     ParameterKey=UserPoolClientName,ParameterValue=$aws_client_app_name
+aws cloudformation create-stack   --template-body file://cognito-setup.yaml   --stack-name CognitoSetup   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM   --parameters     ParameterKey=UserPoolName,ParameterValue=$aws_user_pool_name     ParameterKey=UserPoolClientName,ParameterValue=$aws_client_app_name
 
 #-- getting the output of cloud formation stack
 
@@ -31,8 +31,8 @@ aws_dbuser_name="awsuser"
 aws_ddbtable_name="client_connections_a"
 aws_wsep_param_name="REDSHIFT_WSS_ENDPOINT_a"
 aws_rapiep_param_name="REDSHIFT_REST_API_ENDPOINT_a"
-aws_ddl_script_path="s3://api-gateway-scripts-pavan/setupscript.sql"
-aws_query_script_path="s3://api-gateway-scripts-pavan/queryscript.sql"
+aws_ddl_script_path="s3://api-gateway-scripts/setupscript.sql"
+aws_query_script_path="s3://api-gateway-scripts/queryscript.sql"
 
 aws cloudformation create-stack   --template-body file://backend-setup.yaml   --stack-name BackendSetup   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM   --parameters     ParameterKey=RedshiftClusterEndpoint,ParameterValue=$aws_redshift_cluster_ep     ParameterKey=DbUsername,ParameterValue=$aws_dbuser_name     ParameterKey=DDBTableName,ParameterValue=$aws_ddbtable_name     ParameterKey=WebSocketEndpointSSMParameterName,ParameterValue=$aws_wsep_param_name     ParameterKey=RestApiEndpointSSMParameterName,ParameterValue=$aws_rapiep_param_name     ParameterKey=DDLScriptS3Path,ParameterValue=$aws_ddl_script_path     ParameterKey=QueryScriptS3Path,ParameterValue=$aws_query_script_path     ParameterKey=UserPoolARN,ParameterValue=$UserPoolARN
 
@@ -77,6 +77,6 @@ git commit -m 'new'
 git push
 cd ..
 #--running the cloud formation stack
-aws cloudformation create-stack   --template-body file://webapp-setup.yaml   --stack-name WebappSetup   --capabilities CAPABILITY_NAMED_IAM   --parameters     ParameterKey=UserGitURL,ParameterValue=$UserGitURL ParameterKey=UserGitARN,ParameterValue=$UserGitARN
+aws cloudformation create-stack   --template-body file://webapp-setup.yaml   --stack-name WebappSetup   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM   --parameters     ParameterKey=UserGitURL,ParameterValue=$UserGitURL ParameterKey=UserGitARN,ParameterValue=$UserGitARN
 
 echo "Task Completed"
