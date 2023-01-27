@@ -7,11 +7,13 @@
 * For this tutorial, we’ll be setting the Lambda Handler as `lambda_function.lambda_handler`
 * IAM Role attached to your Redshift cluster having access to S3
 * IAM Role attached to your Lambda function having access to `AmazonRedshiftDataFullAccess` role
+* For Redshift Serverless latest version of python boto3 library is needed, refer to [this](https://aws.amazon.com/premiumsupport/knowledge-center/lambda-python-runtime-errors/)  article to create a Lambda layer that uses the latest Boto 3 version.
     
 
 ## Walk-through
 
 The AWS Lambda event handler JSON object should be this structure. Replace the values for placeholder according to your redshift cluster and IAM Role configuration. 
+### Redshift provisioned
 ```json
 {
      "redshift_cluster_id": "<your redshift cluster identifier>",
@@ -20,8 +22,17 @@ The AWS Lambda event handler JSON object should be this structure. Replace the v
      "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
      "run_type": "<synchronous OR asynchronous>"
 }
-```
 
+```
+### Redshift serverless
+```json
+{
+     "redshift_workgroup_name": "<your redshift serverless workgroup name>",
+     "redshift_database": "<your redshift serverless database name>",
+     "redshift_iam_role": "<your redshift serverless IAM role with correct authorization and access>",
+     "run_type": "<synchronous OR asynchronous>"
+}
+```
 Initiate your AWSRedshiftDataAPI client. Additional information can be found [here](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/redshift-data.html).
 ```python
 client = boto3.client('redshift-data')
@@ -40,9 +51,16 @@ You can leverage AWS Secrets Manager to enable access to your Amazon Redshift da
 
 The documentation for `withEvent` and `SecretArn` parameter for your ExecuteStatement can be found [here](https://docs.aws.amazon.com/redshift-data/latest/APIReference/API_ExecuteStatement.html).
 
+### Redshift provisioned
 ```python
 res = client.execute_statement(
     Database=redshift_database, DbUser=redshift_user, Sql=query, ClusterIdentifier=redshift_cluster_id)
+```
+
+### Redshift serverless
+```python
+res = client.execute_statement(
+    Database=redshift_database, Sql=query, WorkgroupName=redshift_workgroup_name)
 ```
 
 We can set the run type to be synchronous or asynchronous. Please check the general ReadMe page for more information.

@@ -22,7 +22,7 @@ We'll also demonstrate some common use-cases customers are using Redshift Data A
 
 ## Architectural Diagram 
 
-![Architecture Diagram](flowdiagram.jpeg)
+![Architecture Diagram](Data-api-flowdiagram.png)
 
 ### About Redshift Data API
 
@@ -39,4 +39,3 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 ## License
 
 This library is licensed under the MIT-0 License. See the LICENSE file.
-
