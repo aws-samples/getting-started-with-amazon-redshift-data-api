@@ -20,17 +20,27 @@ Although this tutorial is aimed for you to better handle Amazon Redshift Data AP
 * For this tutorial, we’ll be setting the Lambda Handler as `example.RedshiftDataAPI`
 * IAM Role attached to your Redshift cluster having access to S3
 * IAM Role attached to your Lambda function having access to `AmazonRedshiftDataFullAccess` role
-
+* IAM Role attached to your Lambda function having access to `AmazonRedshiftFullAccess` role
 
 ## Walk-through
 
 The AWS Lambda event handler JSON object should be this structure. Replace the values for placeholder according to your redshift cluster and IAM Role configuration. 
 
+### Redshift provisioned
 ```json
 {
     "redshift_cluster_id": "<your redshift cluster identifier>",
     "redshift_database": "<your redshift database name>",
     "redshift_user": "<your redshift database user>",
+    "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
+    "run_type": "<synchronous OR asynchronous>"
+}
+```
+### Redshift serverless
+```json
+{
+    "redshift_workgroup_name": "<your redshift serverless workgroup name>",
+    "redshift_database": "<your redshift database name>",
     "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
     "run_type": "<synchronous OR asynchronous>"
 }
@@ -58,10 +68,20 @@ You can leverage AWS Secrets Manager to enable access to your Amazon Redshift da
 The documentation for `withEvent` and `SecretArn` parameter for your ExecuteStatement can be found [here](https://docs.aws.amazon.com/redshift-data/latest/APIReference/API_ExecuteStatement.html). 
 
 
+### Redshift provisioned
 ```java
 ExecuteStatementRequest statementRequest = new ExecuteStatementRequest();
 statementRequest.setClusterIdentifier(redshiftClusterId);
 statementRequest.setDbUser(redshiftUser);
+statementRequest.setDatabase(redshiftDatabaseName);
+statementRequest.setSql(query);
+ExecuteStatementResult resp = redshiftDataApiClient.executeStatement(statementRequest);
+```
+
+### Redshift serverless
+```java
+ExecuteStatementRequest statementRequest = new ExecuteStatementRequest();
+statementRequest.setWorkgroupName(redshiftWorkgroupName);
 statementRequest.setDatabase(redshiftDatabaseName);
 statementRequest.setSql(query);
 ExecuteStatementResult resp = redshiftDataApiClient.executeStatement(statementRequest);
