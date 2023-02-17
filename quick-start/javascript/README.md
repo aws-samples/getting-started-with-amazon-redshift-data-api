@@ -15,7 +15,7 @@ If you would like to use JavaScript AWS SDK v3 and AWS Lambda, you will have to 
 * For this tutorial, we’ll be setting the Lambda Handler as `index.handler`
 * IAM Role attached to your Redshift cluster having access to S3
 * IAM Role used by your Lambda function is attached with a policy - `AmazonRedshiftDataFullAccess` see more [here](https://docs.aws.amazon.com/redshift/latest/mgmt/data-api.html#data-api-access).
-
+* IAM Role attached to your Lambda function having access to `AmazonRedshiftFullAccess` role
 
 ## Walk-through
 
