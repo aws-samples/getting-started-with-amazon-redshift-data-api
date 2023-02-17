@@ -17,12 +17,13 @@ Although this tutorial is aimed for you to better handle Amazon Redshift Data AP
 * The default Lambda function timeout is set to 3 seconds. Depending on your style of execution, you may have to increase this parameter.
 * IAM Role attached to your Redshift cluster having access to S3
 * IAM Role attached to your Lambda function having access to `AmazonRedshiftDataFullAccess` role
-
+* IAM Role attached to your Lambda function having access to `AmazonRedshiftFullAccess` role
 
 ## Walk-through
 
 The AWS Lambda event handler JSON object should be this structure. Replace the values for placeholder according to your redshift cluster and IAM Role configuration. 
 
+### Redshift provisioned
 ```json
 {
     "redshift_cluster_id": "<your redshift cluster identifier>",
@@ -32,7 +33,18 @@ The AWS Lambda event handler JSON object should be this structure. Replace the v
     "run_type": "<synchronous OR asynchronous>"
 }
 ```
+### Redshift serverless
 
+Rename the file "main_sl.go" to "main.go" and use it as the main file.
+
+```json
+{
+    "redshift_workgroup_name": "<your redshift serverless workgroup name>",
+    "redshift_database": "<your redshift database name>",
+    "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
+    "run_type": "<synchronous OR asynchronous>"
+}
+```
 
 Initiate your RedshiftDataAPIServiceAPI client. Additional information can be found [here](https://docs.aws.amazon.com/sdk-for-go/api/service/redshiftdataapiservice/).
 
