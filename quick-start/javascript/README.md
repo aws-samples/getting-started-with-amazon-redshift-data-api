@@ -21,11 +21,21 @@ If you would like to use JavaScript AWS SDK v3 and AWS Lambda, you will have to 
 
 The AWS Lambda event handler JSON object should have this structure. Replace the values for placeholder according to your redshift cluster and IAM Role configuration. 
 
+### Redshift provisioned
 ```json
 {
     "redshift_cluster_id": "<your redshift cluster identifier>",
     "redshift_database": "<your redshift database name>",
     "redshift_user": "<your redshift database user>",
+    "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
+    "run_type": "<synchronous OR asynchronous>"
+}
+```
+### Redshift serverless
+```json
+{
+    "redshift_workgroup_name": "<your redshift serverless workgroup name>",
+    "redshift_database": "<your redshift database name>",
     "redshift_iam_role": "<your redshift IAM role with correct authorization and access>",
     "run_type": "<synchronous OR asynchronous>"
 }
