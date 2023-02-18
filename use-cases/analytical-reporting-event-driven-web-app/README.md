@@ -76,8 +76,7 @@ The Web Application Page will be as shown below. The Page has minimal functional
 
 ![CloudFormation Inputs](images/webapp-page.png)
 
-More details with regards to how to test and clean up are on the [Blog Post]
-(https://aws.amazon.com/blogs/big-data/build-a-serverless-analytics-application-with-amazon-redshift-and-amazon-api-gateway/)
+More details with regards to how to test and clean up are on the [Blog Post](https://aws.amazon.com/blogs/big-data/build-a-serverless-analytics-application-with-amazon-redshift-and-amazon-api-gateway/)
 
 ## License
 
