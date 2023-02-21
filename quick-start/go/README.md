@@ -6,8 +6,8 @@ The sample Go code given is leveraging AWS SDK version 1.x for Go. For more info
 
 Although this tutorial is aimed for you to better handle Amazon Redshift Data API, here are the instructions to deploy to a Go runtime lambda function. 
 
-1. Creating a Go Lambda functions with .zip file archives: [Link](https://docs.amazonaws.cn/en_us/lambda/latest/dg/golang-package.html)
-2. Understand what an AWS Lambda function handler is: [Link](https://docs.amazonaws.cn/en_us/lambda/latest/dg/golang-handler.html)
+1. Creating a Go Lambda functions with .zip file archives: [Link](https://docs.aws.amazon.com/lambda/latest/dg/golang-package.html)
+2. Understand what an AWS Lambda function handler is: [Link](https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html)
 3. After creating your "Hello Name" greeting deployment package with the function handler, upload .zip file to Lambda to test it out. 
 4. Make sure to configure your Lambda setting's handler to match the Go file name.
 
