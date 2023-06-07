@@ -101,7 +101,8 @@ var DemoApp = window.DemoApp || {};
     }
 
     function toUsername(email) {
-        return email.replace('@', '-at-');
+        /*return email.replace('@', '-at-');*/
+        return email;
     }
 
     /*
