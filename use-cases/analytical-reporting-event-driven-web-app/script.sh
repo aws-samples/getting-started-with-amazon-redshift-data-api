@@ -43,7 +43,7 @@ status="start";
 while [ "$status" != "CREATE_COMPLETE" ]
 do
    aws cloudformation describe-stacks --stack-name BackendSetup > output1.json
-   status=$(jq '.Stacks[].StackStatus' output.json | sed -e 's/^"//' -e 's/"$//')
+   status=$(jq '.Stacks[].StackStatus' output1.json | sed -e 's/^"//' -e 's/"$//')
 done
 aws cloudformation describe-stacks --stack-name BackendSetup > output1.json
 
